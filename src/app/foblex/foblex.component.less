@@ -1,0 +1,307 @@
+/* ==========================================================================
+   1. GLOBAL VARIABLES
+   ========================================================================== */
+::ng-deep :root {
+  --node-background-color: #ffffff;
+  --node-border-color: rgba(60, 60, 67, 0.36);
+  --node-text-color: rgba(60, 60, 67, 1);
+  --connection-color: rgba(60, 60, 67, 0.78);
+  --snap-connection-color: rgba(60, 60, 67, 0.38);
+  --input-output-color: #555555;
+  --selection-color: #3451b2;
+}
+
+/* ==========================================================================
+   2. MAIN CONTAINER
+   ========================================================================== */
+.f-flow {
+  height: 100vh;
+  width: 100vw;
+  border: 1px solid #e5e5e5;
+  background-color: #fafafa; /* Light gray background for contrast */
+  position: relative;
+}
+
+/* ==========================================================================
+   3. TOOLBAR (Export/Import Buttons)
+   ========================================================================== */
+.toolbar {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 100;
+  display: flex;
+  gap: 10px;
+
+  button {
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #f0f0f0;
+      border-color: #bbb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+      background: #e5e5e5;
+    }
+  }
+}
+
+/* ==========================================================================
+   4. SIDEBAR (Palette)
+   ========================================================================== */
+.external-panel {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  width: 140px;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+  .title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+}
+
+.external-item {
+  padding: 8px;
+  background-color: var(--node-background-color);
+  border: 1px solid var(--node-border-color);
+  cursor: grab;
+  text-align: center;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--node-text-color);
+  transition: transform 0.1s;
+
+  &:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+  }
+  
+  /* Default Rect Preview */
+  border-radius: 4px;
+  min-height: 40px;
+
+  /* Circle Preview */
+  &.preview-circle {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    align-self: center;
+  }
+
+  /* Diamond Preview */
+  &.preview-diamond {
+    width: 45px;
+    height: 45px;
+    transform: rotate(45deg);
+    align-self: center;
+    margin: 10px 0; /* Add margin to account for rotation corners */
+    
+    span {
+      transform: rotate(-45deg); /* Keep text straight */
+    }
+  }
+}
+
+/* ==========================================================================
+   5. NODES (Canvas Items)
+   ========================================================================== */
+.f-node {
+  /* Common Node Styles */
+  padding: 0;
+  color: var(--node-text-color);
+  background: var(--node-background-color);
+  border: 1px solid var(--node-border-color);
+  
+  /* Flexbox to center the inner content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  
+  position: absolute; /* Important for connector positioning */
+  transition: box-shadow 0.2s, border-color 0.2s;
+
+  /* Selection State */
+  &.f-selected {
+    border-color: var(--selection-color);
+    box-shadow: 0 0 0 2px rgba(52, 81, 178, 0.2);
+    z-index: 50; /* Bring selected to front */
+  }
+
+  /* SHOW CONNECTORS ON HOVER */
+  &:hover {
+    .connector {
+      opacity: 1;
+      pointer-events: all;
+    }
+  }
+
+  /* --- SHAPE: RECTANGLE (Default) --- */
+  &.node-rect {
+    border-radius: 4px;
+    /* Default size if not overridden by JS */
+    width: 120px; 
+    height: 60px;
+  }
+
+  /* --- SHAPE: CIRCLE --- */
+  &.node-circle {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    aspect-ratio: 1/1; 
+  }
+
+  /* --- SHAPE: DIAMOND --- */
+  &.node-diamond {
+    width: 100px;
+    height: 100px;
+    border-radius: 2px;
+    transform: rotate(45deg); /* Rotate the container */
+    
+    /* Rotate the text back */
+    .node-content {
+      transform: rotate(-45deg);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+/* Text Content Styling */
+.node-content {
+  pointer-events: none; /* Let clicks pass through to drag handle */
+  padding: 5px;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   6. CONNECTORS (Ports)
+   ========================================================================== */
+.connector {
+  width: 10px;
+  height: 10px;
+  background-color: var(--input-output-color);
+  border: 1px solid #fff; /* White border helps it pop */
+  border-radius: 50%;
+  position: absolute;
+  
+  /* Hidden by default, shown on node hover */
+  opacity: 0; 
+  pointer-events: all; /* Prevent accidental clicks when hidden */
+  transition: opacity 0.2s ease-in-out;
+  cursor: crosshair;
+  z-index: 10;
+
+  &:hover {
+    transform: scale(1.2); /* Grow slightly on hover */
+    background-color: var(--selection-color);
+  }
+
+  /* POSITIONS - Calculated to be centered on the edge */
+  /* transform: translate(...) centers the dot itself */
+
+  &.top {
+    top: 0px; 
+    left: 50%; 
+    transform: translateX(-50%);
+  }
+  
+  &.bottom {
+    bottom: 0px; 
+    left: 50%; 
+    transform: translateX(-50%);
+  }
+  
+  &.left {
+    left: 0px; 
+    top: 50%; 
+    transform: translateY(-50%);
+  }
+  
+  &.right {
+    right: 0px; 
+    top: 50%; 
+    transform: translateY(-50%);
+  }
+}
+
+/* ==========================================================================
+   7. CONNECTIONS (Lines & Arrows)
+   ========================================================================== */
+/* The SVG path of the connection */
+::ng-deep .f-connection-path {
+  stroke: var(--connection-color);
+  stroke-width: 2px;
+}
+
+/* The selected state of a connection */
+::ng-deep .f-connection.f-selected .f-connection-path {
+  stroke: var(--selection-color);
+  stroke-width: 3px;
+}
+
+/* The arrow marker color */
+.connection-marker {
+  fill: var(--connection-color);
+}
+
+.connection-create {
+  ::ng-deep .f-connection-path {
+    stroke: var(--connection-color);
+    stroke-width: 2px;
+    stroke-dasharray: 4 4; /* Makes the line dashed while dragging */
+    opacity: 0.6;
+  }
+}
+
+/* ==========================================================================
+   8. UTILITIES (Resize Handles)
+   ========================================================================== */
+.f-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #fff;
+  border: 1px solid var(--selection-color);
+  z-index: 100;
+  border-radius: 50%;
+}
+
+/* Only show resize handles when node is selected */
+.f-node:not(.f-selected) .f-resize-handle {
+  display: none;
+}

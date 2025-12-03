@@ -1,0 +1,63 @@
+<!-- TOOLBAR FOR ACTIONS -->
+<div class="toolbar">
+  <button (click)="exportFlow()">💾 Export JSON</button>
+  <button (click)="triggerImport()">📂 Import JSON</button>
+  
+  <!-- Hidden File Input -->
+  <input #fileInputRef type="file" accept=".json" style="display: none;" (change)="onFileSelected($event)">
+</div>
+
+<f-flow fDraggable 
+        (fLoaded)="onLoaded()" 
+        (fCreateNode)="onCreateNode($event)"
+        (fCreateConnection)="onCreateConnection($event)">
+  
+  <div class="external-panel">
+    <div class="external-item" fExternalItem [fData]="{ type: 'rect', text: 'Process' }" [fPreviewMatchSize]="true">Rect</div>
+    <div class="external-item preview-circle" fExternalItem [fData]="{ type: 'circle', text: 'Start' }" [fPreviewMatchSize]="true">Circ</div>
+    <div class="external-item preview-diamond" fExternalItem [fData]="{ type: 'diamond', text: 'If', rotate: 45 }" [fPreviewMatchSize]="true"><span>Dia</span></div>
+  </div>
+
+  <f-canvas>
+    <!-- 1. CONNECTIONS LAYER -->
+     <f-connection-for-create class="connection-create">
+  </f-connection-for-create>
+    @for (connection of connections(); track connection.id) {
+  <f-connection [fConnectionId]="connection.id"
+                [fOutputId]="connection.source" 
+                [fInputId]="connection.target">
+  </f-connection>
+}
+
+    <!-- 2. NODES LAYER -->
+    @for (node of nodes(); track node.id) {
+      <div fNode 
+           [fNodeId]="node.id"
+           [fNodePosition]="node.position" 
+           fDragHandle
+           class="centered-node"
+           [ngClass]="'node-' + node.type"
+           [fNodeRotate]="node.rotate">
+        
+        <!-- INPUTS (Connectors) -->
+        <div fNodeInput [fInputId]="node.id + '_in_top'" [fInputMultiple]="true" fInputConnectableSide="top" class="connector top" ></div>
+        <div fNodeInput [fInputId]="node.id + '_in_bottom'" [fInputMultiple]="true" fInputConnectableSide="bottom" class="connector bottom"></div>
+        <div fNodeInput [fInputId]="node.id + '_in_left'" [fInputMultiple]="true" fInputConnectableSide="left" class="connector left"></div>
+        <div fNodeInput [fInputId]="node.id + '_in_right'" [fInputMultiple]="true" fInputConnectableSide="right" class="connector right"></div>
+
+        <!-- OUTPUTS (Connectors) -->
+        <div fNodeOutput [fOutputId]="node.id + '_out_top'" fOutputConnectableSide="top" class="connector output top"></div>
+        <div fNodeOutput [fOutputId]="node.id + '_out_bottom'" fOutputConnectableSide="bottom" class="connector output bottom"></div>
+        <div fNodeOutput [fOutputId]="node.id + '_out_left'" fOutputConnectableSide="left" class="connector output left"></div>
+        <div fNodeOutput [fOutputId]="node.id + '_out_right'" fOutputConnectableSide="right" class="connector output right"></div>
+
+        <!-- CONTENT -->
+        <div class="node-content" >
+           {{ node.text }}
+        </div>
+           
+      </div>
+    }
+
+  </f-canvas>
+</f-flow>
